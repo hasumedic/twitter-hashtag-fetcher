@@ -3,9 +3,12 @@ package actors
 import actors.HashtagFetcher.{Tweet, HashtagTweets, CheckTweets}
 import akka.actor.{ActorLogging, Actor}
 import org.joda.time.DateTime
+import play.api.Configuration
+import play.api.libs.oauth.{RequestToken, ConsumerKey}
 import scala.concurrent.duration._
+import javax.inject._
 
-class HashtagFetcher extends Actor with ActorLogging {
+class HashtagFetcher @Inject()(configuration: Configuration) extends Actor with ActorLogging {
 
   val scheduler = context.system.scheduler.schedule(
     initialDelay = 5.seconds,
@@ -13,6 +16,13 @@ class HashtagFetcher extends Actor with ActorLogging {
     receiver = self,
     message = CheckTweets
   )
+
+  def credentials = for {
+    apiKey <- configuration.getString("twitter.apiKey")
+    apiSecret <- configuration.getString("twitter.apiSecret")
+    token <- configuration.getString("twitter.accessToken")
+    tokenSecret <- configuration.getString("twitter.accessTokenSecret")
+  } yield (ConsumerKey(apiKey, apiSecret), RequestToken(token, tokenSecret))
 
   override def postStop(): Unit = {
     scheduler.cancel()
