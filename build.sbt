@@ -10,7 +10,11 @@ libraryDependencies ++= Seq(
   jdbc,
   cache,
   ws,
-  "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.0-RC1" % Test
+  "org.postgresql" % "postgresql" % "9.4-1201-jdbc41",
+  "org.jooq" % "jooq" % "3.7.0",
+  "org.jooq" % "jooq-codegen-maven" % "3.7.0",
+  "org.jooq" % "jooq-meta" % "3.7.0",
+  specs2 % Test
 )
 
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
