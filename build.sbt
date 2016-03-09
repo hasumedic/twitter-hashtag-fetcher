@@ -18,3 +18,16 @@ libraryDependencies ++= Seq(
 )
 
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
+
+
+// Enables JOOQ's code generation
+val generateJOOQ = taskKey[Seq[File]]("Generate JooQ classes")
+
+val generateJOOQTask = (sourceManaged, fullClasspath in Compile, runner in Compile, streams) map { (src, cp, r, s) =>
+  toError(r.run("org.jooq.util.GenerationTool", cp.files, Array("conf/hashtag_aggregator.xml"), s.log))
+  ((src / "main/generated") ** "*.scala").get
+}
+
+generateJOOQ <<= generateJOOQTask
+
+unmanagedSourceDirectories in Compile += sourceManaged.value / "main/generated"
