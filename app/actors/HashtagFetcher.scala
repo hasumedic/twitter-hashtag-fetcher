@@ -5,9 +5,13 @@ import javax.inject._
 
 import actors.HashtagFetcher.{CheckTweets, HashtagTweets, Tweet, User}
 import akka.actor.{Actor, ActorLogging}
+import akka.pattern.pipe
+import com.google.inject.AbstractModule
+import database.DB
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import play.api.Configuration
+import play.api.libs.concurrent.AkkaGuiceSupport
 import play.api.libs.json.JsArray
 import play.api.libs.oauth.{ConsumerKey, OAuthCalculator, RequestToken}
 import play.api.libs.ws.WS
@@ -16,7 +20,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.control.NonFatal
 
-class HashtagFetcher @Inject()(configuration: Configuration) extends Actor with ActorLogging {
+class HashtagFetcher @Inject()(configuration: Configuration, database: DB) extends Actor with ActorLogging {
 
   implicit val executionContext = context.dispatcher
 
@@ -41,7 +45,7 @@ class HashtagFetcher @Inject()(configuration: Configuration) extends Actor with 
   var lastTweetTime: Option[DateTime] = Some(DateTime.now)
 
 
-  def checkTweets = {
+  def checkTweets(): Unit = {
 
     val tweetsCollection = for {
       (consumerKey, requestToken) <- credentials
@@ -77,10 +81,10 @@ class HashtagFetcher @Inject()(configuration: Configuration) extends Actor with 
       }
   }
 
-  def storeTweets(usages: Seq[Tweet]): Unit = ???
+  def storeTweets(tweets: Seq[Tweet]) = ???
 
   def receive: Receive = {
-    case CheckTweets => checkTweets
+    case CheckTweets => checkTweets()
     case HashtagTweets(usages) => storeTweets(usages)
   }
 }
@@ -95,4 +99,8 @@ object HashtagFetcher {
 
   case class HashtagTweets(usages: Seq[Tweet])
 
+}
+
+class HashtagFetcherModule extends AbstractModule with AkkaGuiceSupport {
+  def configure(): Unit = bindActor[HashtagFetcher]("fetcher")
 }
