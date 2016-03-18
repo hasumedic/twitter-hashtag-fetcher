@@ -1,5 +1,6 @@
 package actors
 
+import java.sql.Timestamp
 import java.util.Locale
 import javax.inject._
 
@@ -8,8 +9,10 @@ import akka.actor.{Actor, ActorLogging}
 import akka.pattern.pipe
 import com.google.inject.AbstractModule
 import database.DB
+import generated.Tables._
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
+import org.jooq.impl.DSL._
 import play.api.Configuration
 import play.api.libs.concurrent.AkkaGuiceSupport
 import play.api.libs.json.JsArray
@@ -81,7 +84,45 @@ class HashtagFetcher @Inject()(configuration: Configuration, database: DB) exten
       }
   }
 
-  def storeTweets(tweets: Seq[Tweet]) = ???
+  def storeTweets(tweets: Seq[Tweet]) = database.withTransaction { sql =>
+    log.info("Inserting potentially {} tweets into the database", tweets.size)
+    val now = new Timestamp(DateTime.now.getMillis)
+
+    def upsertUser(handle: String) = {
+      sql.insertInto(TWITTER_USER, TWITTER_USER.TWITTER_USERNAME, TWITTER_USER.CREATED_ON)
+        .select(
+          select(value(handle), value(now))
+            .whereNotExists(
+              selectOne()
+                .from(TWITTER_USER)
+                .where(TWITTER_USER.TWITTER_USERNAME.equal(handle))
+            )
+        )
+        .execute()
+    }
+
+    tweets.foreach { tweet =>
+      upsertUser(tweet.user.handle)
+
+      sql.insertInto(TWEETS, TWEETS.TWEET_ID, TWEETS.USER_ID, TWEETS.TEXT, TWEETS.CREATED_ON)
+        .select(
+          select(
+            value(tweet.id),
+            TWITTER_USER.ID,
+            value(tweet.text),
+            value(now)
+          )
+            .from(TWITTER_USER)
+            .where(TWITTER_USER.TWITTER_USERNAME.equal(tweet.user.handle))
+            .andNotExists(
+              selectOne()
+                .from(TWEETS)
+                .where(TWEETS.TWEET_ID.equal(tweet.id))
+            )
+        )
+        .execute()
+    }
+  }
 
   def receive: Receive = {
     case CheckTweets => checkTweets()
