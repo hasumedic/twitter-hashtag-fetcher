@@ -17,13 +17,13 @@ import play.api.Configuration
 import play.api.libs.concurrent.AkkaGuiceSupport
 import play.api.libs.json.JsArray
 import play.api.libs.oauth.{ConsumerKey, OAuthCalculator, RequestToken}
-import play.api.libs.ws.WS
+import play.api.libs.ws.WSClient
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.control.NonFatal
 
-class HashtagFetcher @Inject()(configuration: Configuration, database: DB) extends Actor with ActorLogging {
+class HashtagFetcher @Inject()(configuration: Configuration, database: DB, WS: WSClient) extends Actor with ActorLogging {
 
   implicit val executionContext = context.dispatcher
 
