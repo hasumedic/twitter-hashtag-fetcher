@@ -2,8 +2,8 @@
 <configuration xmlns="http://www.jooq.org/xsd/jooq-codegen-3.7.0.xsd">
     <jdbc>
         <driver>org.postgresql.Driver</driver>
-        <url>jdbc:postgresql://localhost/hashtag_aggregator</url>
-        <user>user</user>
+        <url>jdbc:postgresql://localhost:5432/hashtag_aggregator</url>
+        <user>postgres</user>
         <password></password>
     </jdbc>
     <generator>
