@@ -53,7 +53,7 @@ class HashtagFetcher @Inject()(configuration: Configuration, database: DB, WS: W
     val tweetsCollection = for {
       (consumerKey, requestToken) <- credentials
       time <- lastTweetTime
-    } yield fetchTweets(consumerKey, requestToken, "#FCB", time)
+    } yield fetchTweets(consumerKey, requestToken, configuration.getString("twitter.hashtag").get, time)
 
     tweetsCollection.foreach { tweets =>
       tweets.map { t =>

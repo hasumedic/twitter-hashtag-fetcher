@@ -2,3 +2,5 @@ twitter.apiKey = ""
 twitter.apiSecret = ""
 twitter.accessToken = ""
 twitter.accessTokenSecret = ""
+
+twitter.hashtag = ""
