@@ -9,18 +9,16 @@ import play.api.mvc.{Action, Controller}
 
 class Application @Inject()(database: DB) extends Controller {
   def index = Action.async { implicit request =>
-    import org.jooq.impl.DSL._
     import generated.Tables._
+    import org.jooq.impl.DSL._
 
     database.query { sql =>
-      val tweetCount = sql.select(
-        count()
-      ).from(TWEETS)
-        .where(
-          TWEETS.CREATED_ON.gt(value(new Timestamp(DateTime.now.minusDays(1).getMillis)))
-        ).execute()
+      val tweetCount = sql.select(count())
+        .from(TWEETS)
+        .where(TWEETS.CREATED_ON.gt(value(new Timestamp(DateTime.now.minusDays(1).getMillis))))
+        .fetchOne(count())
 
-      Ok(views.html.index(tweetCount.toString))
+      Ok(views.html.index(tweetCount))
     }
   }
 }
